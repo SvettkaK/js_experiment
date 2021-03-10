@@ -1,0 +1,139 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.15.1/dist/phaser-arcade-physics.min.js"></script>
+</head>
+<body>
+
+    <script>
+    var config = {
+        type: Phaser.AUTO,
+        width: 480,
+        height: 800,
+        physics: {
+            default: 'arcade',
+            arcade: {
+                gravity: { y: 200 }
+            }
+        },
+        scene: {
+            preload: preload,
+            create: create,
+            update: update
+        }
+    };
+
+    var game = new Phaser.Game(config);
+
+    var bg;
+    var bg2;
+    var bgSpeed;
+
+    function preload ()
+    {
+        this.load.setBaseURL('http://localhost/test/ufo_phaser_js');
+
+        this.load.image('forest', 'img/forest.jpg');
+        this.load.spritesheet('player', 'img/pers.png', { frameWidth: 101, frameHeight: 182 });
+    }
+
+    function create ()
+    {
+        //this.add.image(0, 0, 'forest');
+        bg = this.add.image(0, 0, 'forest').setOrigin(0);//1064*480
+
+        bg2 = this.add.image(1063, 0, 'forest').setOrigin(0);
+        bgSpeed = Phaser.Math.GetSpeed(600, 6);
+
+
+        this.anims.create({
+            key: 'down',
+            frames: this.anims.generateFrameNumbers('player', { frames: [ 0, 1, 2, 3] }),
+            frameRate: 4,
+            repeat: -1
+        });
+
+        this.player = this.physics.add.sprite(130, 460, 'player', 6);
+
+        this.physics.world.bounds.width = 480;
+        this.physics.world.bounds.height = 460;
+        this.player.setCollideWorldBounds(true);
+        this.player.setScale(0.5,0.5);
+
+
+
+        this.enemies = this.add.group({
+            key: 'player',
+            repeat: 3,
+            setXY: {
+            x: 500,
+            y: 418,
+            stepX: 300,
+            stepY: 0
+            }
+        });
+        // масштабируем врагов
+        //Phaser.Actions.ScaleXY(this.enemies.getChildren(), -0.5, -0.5);
+       
+        Phaser.Actions.Call(this.enemies.getChildren(), function(enemy) {
+        
+            enemy.setScale(-0.5,0.5);
+        }, this);
+        
+
+    }
+
+    function update (time, delta)
+    {
+        bg.x -= bgSpeed*16;
+        bg2.x -= bgSpeed*16;
+
+        if (bg.x < -1063)
+        {
+            bg.x = 1063;
+            //console.log("bg.x = " + bg.x + " bg2.x = "+bg2.x + " delta = " + delta + " time = " + time );
+        }
+
+        if (bg2.x < -1063)
+        {
+            bg2.x = 1063;
+            //console.log("bg.x = " + bg.x + " bg2.x = "+bg2.x + " delta = " + delta + " time = " + time );
+        }
+
+        this.player.anims.play('down', true);
+        
+
+        
+        Phaser.Actions.Call(this.enemies.getChildren(), function(enemy) {
+            enemy.speed = Math.random() * 2 + 1; // задаем скорость врагов
+            enemy.anims.play('down', true);
+
+            if (Phaser.Geom.Intersects.RectangleToRectangle(this.player.getBounds(), enemy.getBounds())) {
+                enemy.x += 50;
+                //this.gameOver();
+                //break;
+            }
+
+            enemy.x -= bgSpeed*16+1;
+            if (enemy.x < 0)
+            {
+                console.log("enemy.x = " + enemy.x );
+                enemy.x = 600;
+                console.log("enemy.x = " + enemy.x );
+            }
+
+            
+        }, this);
+
+        // this.player2.x -= bgSpeed*16+1;
+        // if (this.player2.x < 0)
+        // {
+        //     this.player2.x = 600;
+        //     console.log("this.player2.x = " + this.player2.x );
+        // }
+    }
+    </script>
+
+</body>
+</html>
